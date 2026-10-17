@@ -5,7 +5,7 @@ Step 1 of the URL shortener: create a shortened link. Retrieval/redirect is step
 ## Requirements
 
 - **R1** — The service exposes `POST /links`, which creates a short link for a supplied URL and stores it durably in Postgres.
-- **R2** — The request body is `{ "url": string }`. The URL must be an absolute `http`/`https` URL and at most 2048 characters (matching the database limit).
+- **R2** — The request body is `{ "url": string }`. The URL must be an absolute `http`/`https` URL. The URL is normalized at creation: the value stored and returned is `new URL(url).href` (canonical absolute form, percent-encoded to ASCII so it is always safe to emit as a response header), and the normalized value must be at most 2048 characters (matching the database limit).
 - **R3** — The short code is generated server-side: 7 characters, Base62, drawn from the OS CSPRNG (`node:crypto`).
 - **R4** — Codes are unique. The insert uses `ON CONFLICT DO NOTHING`; on a collision the route retries with a fresh code, up to 3 attempts. If all attempts collide, the response is `500` with `internal_error` (collisions are astronomically unlikely; a 409 is not meaningful to API callers here).
 - **R5** — On success the response is `201` with `{ "id": number, "code": string, "url": string }`.

@@ -45,4 +45,34 @@ describe("POST /links (real Postgres)", () => {
     expect(stored).toHaveLength(1);
     if (first) createdIds.push(first.id);
   });
+
+  it("redirects GET /links/:code to the stored URL and leaves the row unchanged", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/links",
+      payload: { url: "https://example.com/redirect-me" },
+    });
+    expect(created.statusCode).toBe(201);
+    const { id, code, url } = created.json();
+    createdIds.push(id);
+
+    const res = await app.inject({ method: "GET", url: `/links/${code}` });
+
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toBe("https://example.com/redirect-me");
+    const stored = await db.select().from(links).where(eq(links.code, code));
+    expect(stored).toEqual([{ id, code, url }]);
+  });
+
+  it("redirects a non-ASCII destination through its percent-encoded href", async () => {
+    const created = await app.inject({ method: "POST", url: "/links", payload: { url: "https://example.com/你好" } });
+    expect(created.statusCode).toBe(201);
+    const { id, code } = created.json();
+    createdIds.push(id);
+
+    const res = await app.inject({ method: "GET", url: `/links/${code}` });
+
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toBe("https://example.com/%E4%BD%A0%E5%A5%BD");
+  });
 });

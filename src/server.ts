@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyError, type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import type { Db } from "./db/client.js";
 import { errorBody } from "./lib/errors.js";
@@ -12,6 +12,12 @@ export function buildServer({ db, logLevel = "info" }: AppDeps): FastifyInstance
   const app = Fastify({
     logger: { level: logLevel },
     genReqId: (req) => (req.headers["x-request-id"] as string | undefined) ?? randomUUID(),
+    // Router-level failures (bad URL encoding, params over maxParamLength) bypass the
+    // error/not-found handlers; serve the standard JSON 404 for them too.
+    frameworkErrors: (error: FastifyError, req: FastifyRequest, reply: FastifyReply) => {
+      req.log.warn({ err: error }, "router error");
+      return reply.code(404).send(errorBody("not_found", "Route not found"));
+    },
   });
 
   app.setErrorHandler((err, req, reply) => {

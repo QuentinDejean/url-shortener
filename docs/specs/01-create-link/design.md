@@ -32,6 +32,8 @@ Content-Type: application/json
 
 Code generation: 7-char Base62 (`A-Za-z0-9`) via `randomInt` from `node:crypto`, length fits `varchar(10)` with headroom. Insert is `INSERT ... ON CONFLICT DO NOTHING RETURNING id, code, url`; a `null` row means the code collided, and the route retries (max 3 attempts) before returning 500.
 
+**URL normalization (decided after the step-2 review):** the stored URL is `new URL(url).href` of the submitted URL — canonical, absolute, and percent-encoded to ASCII. This guarantees every stored URL can be emitted as a `Location` header (a raw Unicode path like `https://example.com/你好` would make Node reject the header with `ERR_INVALID_CHAR`). Normalization happens in the Zod schema (`.transform().pipe(z.string().max(2048))`), so the 2048 limit is applied to the normalized value that will actually be stored, and oversize normalized URLs get a `400`.
+
 ## Affected files
 
 - `src/db/schema.ts` — `links` table definition
