@@ -6,6 +6,20 @@
 - Ask before adding a dependency. Prefer the standard library and the stack below.
 - Keep it simple: no extra abstractions or layers until they're needed.
 
+## Spec-driven development (SDD)
+For any feature, data model change, or ambiguous behaviour, spec before code:
+
+1. When I ask for a plan or spec, write it to `docs/specs/<nn>-<feature>/` (e.g. `docs/specs/01-create-link/`). Write no code.
+   - `requirements.md`: the behaviour and acceptance criteria, with ids (R1, R2…). No file paths.
+   - `design.md`: the data model, API contract (requests, responses, status codes), affected files, edge cases, and test plan.
+   - `tasks.md`: vertical slices (each one testable end to end, e.g. via curl), traced to requirement ids. Not horizontal layers (DB, then API, then tests).
+2. Then stop and wait for my approval. List any open decisions as questions; don't guess them.
+3. After approval, implement one task at a time from `tasks.md`, run the tests, tick the task off, and summarise.
+4. If implementation shows the spec is wrong or incomplete, pause, update the spec files, then continue.
+5. Keep specs as living docs: update them in place when behaviour changes.
+6. Skip SDD for tiny fixes (a typo, a one-line change); just do them.
+
+
 ## Default stack (unless the task says otherwise)
 - TypeScript (strict), Node 24, ESM, pnpm.
 - HTTP: Fastify. Validate every request body and param with Zod; return typed responses.

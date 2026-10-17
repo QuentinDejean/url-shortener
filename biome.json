@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "files": { "includes": ["**", "!node_modules", "!dist", "!pnpm-lock.yaml", "!migrations/meta"] },
+  "files": { "includes": ["**", "!node_modules", "!dist", "!pnpm-lock.yaml", "!migrations/meta", "!.amp"] },
   "formatter": { "indentStyle": "space", "lineWidth": 120 },
   "linter": { "enabled": true, "rules": { "preset": "none" } },
   "assist": { "actions": { "source": { "organizeImports": "on" } } }
